@@ -1,0 +1,723 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="http://momentjs.com/downloads/moment.min.js"></script>
+
+    <script type="text/javascript" src="/static/js/spearson.js"></script>/
+    <script type="text/javascript" src="/static/js/corr.js"></script>
+
+    <style type="text/css">
+    div#bar{
+      text-align:center;
+      margin-top:48px;
+    }
+    html, body {
+          width: 100%;
+          height: 100%;
+        }
+    </style>
+
+    <link href="http://bootstrap-combobox-test.herokuapp.com/css/bootstrap-combobox.css" media="screen" rel="stylesheet" type="text/css">
+
+</head>
+  <body>
+  <div class="container-fluid">
+    <div id="bar" class="row">
+
+    <form class="form-inline">
+      <div class="form-group">
+        <label for="search">Terms:</label>
+        <input type="text" class="form-control" id="search" value="{{trend_clean}}" name="trend_line" placeholder="Jane Doe">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail2">Stock:</label>
+        <input type="text" class="form-control" id="stock" name="stock" value="{{stock}}" placeholder="AMZN">
+      </div>
+      <input type="hidden" name="gprop" id="input-gprop" value="" />
+
+      <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a id="date-display">2004 > Today</a> <span class="caret"></span>
+        </button>
+        <ul id="date-select" class="dropdown-menu">
+          <li><a class="timeframe" date="" href="#">2004 > Today</a></li>
+          <li><a class="timeframe" date="today 60-m" href="#">Past 5 Years</a></li>
+          <li><a class="timeframe" date="today 12-m" href="#">Past Year</a></li>
+          <li><a class="timeframe" date="today 90-d" href="#">Past 90 Days</a></li>
+          <li><a class="timeframe" date="today 30-d" href="#">Past 30 Days</a></li>
+          <li><a class="timeframe" date="today 7-d" href="#" >Past 7 Days</a></li>
+          <li role="separator" class="divider"></li>
+          <li><a href="#">Custom Range</a></li>
+        </ul>
+        <input type="hidden" name="date" id="input-date" value="" />
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" name="gprop" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a id="gprop" href="#">Web Search</a> <span class="caret"></span>
+        </button>
+        <ul id="gprop-select" class="dropdown-menu">
+          <li><a class="gprop" gprop="news" href="#">Google News</a></li>
+          <li><a class="gprop" gprop="youtube" href="#">Youtube</a></li>
+          <li><a class="gprop" gprop="images" href="#">Google Images</a></li>
+          <li><a class="gprop" gprop="froogle" href="#">Google Shopping</a></li>
+        </ul>
+      </div>
+      <div class="form-group">
+      <select class="combobox form-control" name="geo" style="display: none;">
+                    <option value="" selected="selected">{% if geo %}{{geo}}{% else %}Worldwide{% endif %}</option>
+                    <option value="US">United States</option>
+                    <option value="IN">India</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="US-AL">Alabama</option>
+                    <option value="US-AK">Alaska</option>
+                    <option value="US-AZ">Arizona</option>
+                    <option value="US-AR">Arkansas</option>
+                    <option value="US-CA">California</option>
+                    <option value="US-CO">Colorado</option>
+                    <option value="US-CT">Connecticut</option>
+                    <option value="US-DE">Delaware</option>
+                    <option value="US-DC">District Of Columbia</option>
+                    <option value="US-FL">Florida</option>
+                    <option value="US-GA">Georgia</option>
+                    <option value="US-HI">Hawaii</option>
+                    <option value="US-ID">Idaho</option>
+                    <option value="US-IL">Illinois</option>
+                    <option value="US-IN">Indiana</option>
+                    <option value="US-IA">Iowa</option>
+                    <option value="US-KS">Kansas</option>
+                    <option value="US-KY">Kentucky</option>
+                    <option value="US-LA">Louisiana</option>
+                    <option value="US-ME">Maine</option>
+                    <option value="US-MD">Maryland</option>
+                    <option value="US-MA">Massachusetts</option>
+                    <option value="US-MI">Michigan</option>
+                    <option value="US-MN">Minnesota</option>
+                    <option value="US-MS">Mississippi</option>
+                    <option value="US-MO">Missouri</option>
+                    <option value="US-MT">Montana</option>
+                    <option value="US-NE">Nebraska</option>
+                    <option value="US-NV">Nevada</option>
+                    <option value="US-NH">New Hampshire</option>
+                    <option value="US-NJ">New Jersey</option>
+                    <option value="US-NM">New Mexico</option>
+                    <option value="US-NY">New York</option>
+                    <option value="US-NC">North Carolina</option>
+                    <option value="US-ND">North Dakota</option>
+                    <option value="US-OH">Ohio</option>
+                    <option value="US-OK">Oklahoma</option>
+                    <option value="US-OR">Oregon</option>
+                    <option value="US-PA">Pennsylvania</option>
+                    <option value="US-RI">Rhode Island</option>
+                    <option value="US-SC">South Carolina</option>
+                    <option value="US-SD">South Dakota</option>
+                    <option value="US-TN">Tennessee</option>
+                    <option value="US-TX">Texas</option>
+                    <option value="US-UT">Utah</option>
+                    <option value="US-VT">Vermont</option>
+                    <option value="US-VA">Virginia</option>
+                    <option value="US-WA">Washington</option>
+                    <option value="US-WV">West Virginia</option>
+                    <option value="US-WI">Wisconsin</option>
+                    <option value="US-WY">Wyoming</option>
+
+                  </select>
+                </div>
+      <button type="submit" class="btn btn-default">Draw Chart</button>
+
+    </form>
+
+    </div>
+    <div class="row">
+      <div id="qt"></div>
+    </div>
+    <div class="row">
+      <div id="x"></div>
+    </div>
+
+
+    {% if old %}
+
+      <script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/863_RC25/embed_loader.js"></script> <script type="text/javascript"> trends.embed.renderExploreWidget("TIMESERIES", {"comparisonItem":[{% for k in keywords %}{"keyword":"{{k}}","geo":"{{geo}}","time":"{{start_date}}"}{% if not forloop.last %},{% endif %}{% endfor %}],"category":0,"property":""}, {"exploreQuery":"q={{trend_line}}&date=date={{start_date}}"}); </script> 
+      <a href="{{ trend_line }}">{{ trend_line }}</a>
+
+    {% else %}
+
+    <div class="row" style="text-align:center">
+      <footer>
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <li>
+            <a href="#" id="prev_date" aria-label="Previous">
+              <span aria-hidden="true">Prev &laquo;</span>
+            </a>
+          </li>
+          <li><a href="#">1</a></li>
+          <li><a href="#">2</a></li>
+          <li><a href="#">3</a></li>
+          <li><a href="#">4</a></li>
+          <li><a href="#">5</a></li>
+          <li>
+            <a href="#" id="next_date" href="{{url}}" aria-label="Next">
+              <span aria-hidden="true"Next >&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      </footer>
+    </div>
+
+<script type="text/javascript">
+google.load('visualization', '1', {packages:["corechart"]});
+google.setOnLoadCallback(queryInit);
+var url = 'https://www.google.com/trends/fetchComponent?q={{trend_line}}&cid=TIMESERIES_GRAPH_0&export=3{% if not hide_date %}&date={{start_date}}{% endif %}{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
+
+var url_template = 'https://www.google.com/trends/fetchComponent?q=xTRENDx&cid=TIMESERIES_GRAPH_0&export=3{% if not hide_date %}&date={{start_date}}{% endif %}{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
+
+var url_no_date = 'https://www.google.com/trends/fetchComponent?q={{trend_line}}&cid=TIMESERIES_GRAPH_0&export=3{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
+
+
+
+
+
+function queryInit(){
+  console.log(url);
+  var query = new google.visualization.Query(url)
+  query.send(handleQueryResponse);
+
+
+  
+}
+
+
+var dataTable = [];
+var options = {};
+var rx = [];
+var chart;
+
+var movingWindowAvg = function(arr, step) {
+        return arr.map(function(_, idx) { 
+          var wnd = arr.slice(idx - step, idx + step + 1); 
+          var result = d3.sum(wnd) / wnd.length; if (isNaN(result)) { result = _; }
+          console.log(_)
+          return result;
+        });
+      };
+
+
+
+
+function handleQueryResponse(response) {
+
+
+//console.log();
+
+        options = {
+          title: '{{ trend_clean }}',
+          height:500,
+          curveType:'function',
+          legend: { position: 'right' },
+        };
+        dataTable = response.getDataTable();
+
+        rx = response;
+
+        drawChart();
+}
+
+
+var td = "{{ticker_dict}}";
+//trendlines: {
+//      0: {
+//        type: 'polynomial',
+//        degree:12,
+//        showR2: true,
+//        visibleInLegend: true,
+//      },
+//      1: {
+//        type: 'polynomial',
+//        degree:12,
+//        showR2: true,
+//        visibleInLegend: true,
+//      }
+//    }
+
+var ticker = {{ticker}};
+var ticker_x = {{ticker_x}};
+
+var diffSum = 0;
+var diffSums = [];
+var csv = "";
+
+function logCSV(){
+  console.log(csv);
+}
+
+
+
+function showMovingAverage(which,av){
+  dataTable.addColumn("number","MA-"+dataTable.getColumnLabel(which),"moving_average");
+  var mA = getDataTableColumn(which);
+  mA = movingWindowAvg(mA,av);
+  for (var i = 0; i < mA.length; i++) {
+    dataTable.setValue(i,dataTable.getNumberOfColumns()-1,mA[i]);
+
+  }
+
+  chart.draw(dataTable,options);
+
+
+}
+
+var delta;
+function showDiff(x){
+  dataTable.addColumn("number","DIFF-"+dataTable.getColumnLabel(x),"diff_"+x.toString());
+
+  delta = diff(getDataTableColumn(x));
+
+  delta.splice(0,0,0);
+
+  var col = dataTable.getNumberOfColumns()-1;
+  dataTable.setValue(0,col,0);
+  for (var i = 0; i < delta.length; i++) {
+    dataTable.setValue(i,col,delta[i]);
+
+  }
+
+  chart.draw(dataTable,options);
+
+
+
+}
+
+var crossTable;
+
+function showCorrelation(x,y){
+  var r = dataTable.getNumberOfRows();
+  //dataTable.addColumn("number","CrossCorrelation","corr");
+  var corr = CrossCorrelate(getDataTableColumn(x),getDataTableColumn(y),(r-r%2)/2)
+
+  crossTable = new google.visualization.DataTable();
+  crossTable.addColumn("number","Weeks","weeks");
+  crossTable.addColumn("number","CrossCorrelation","corr");
+  crossTable.addRows(dataTable.getNumberOfRows());
+
+  for(i=0;i<crossTable.getNumberOfRows();i++){
+    crossTable.setValue(i,0,i-(r-r%2)/2);
+    crossTable.setValue(i,1,corr[i]);
+  }
+
+
+  var xchart = new google.visualization.LineChart(document.getElementById('x'));
+
+  var x_options = {
+    title: 'Cross Correlation',
+    height:200,
+    legend: { position: 'right' }
+  };
+
+  xchart.draw(crossTable,x_options);
+
+
+}
+
+function getDataTableColumn(n) {
+  var column = [];
+    for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
+        column.push(dataTable.getValue(i,n))
+      }
+    return column;
+};
+
+
+function stepDate(step){
+  //var hello = dataTable.getValue(0,0);
+  var current_date = new Date();
+  step = step - 1;
+
+  current_date.setFullYear(current_date.getFullYear() + step);
+
+  return current_date;
+
+
+}
+
+
+
+var tempTable;
+var tempOptions;
+
+var ticker_time = ['{{ticker_time}}'];
+
+
+
+function drawChart(){
+
+  {% if stock %}
+
+      dataTable.addColumn("number","{{stock}}","stock0");
+
+      var row = dataTable.getNumberOfColumns() - 1;
+
+
+      for (var i = 0;i < dataTable.getNumberOfColumns()-2;i++){
+        diffSums.push(0);
+      }
+
+      var pad = dataTable.getNumberOfRows() - ticker.length;
+
+
+      {% if average %}
+          ticker = movingWindowAvg(ticker,{{average}});
+
+      {% endif %}
+
+
+      if(pad > 0){
+
+        for (var i=0;i<pad;i++){
+          ticker.unshift(null);
+          ticker_x.unshift(null);
+        }
+
+      }else if (pad < 0){
+
+        {% if step %}
+            console.log(ticker)
+            var start = Math.abs(pad)-(dataTable.getNumberOfRows()*Math.abs({{step}}));
+            var end = start + dataTable.getNumberOfRows();
+            ticker = ticker.slice(start,end);
+            console.log(ticker)
+            ticker_x = ticker_x.slice(start,end);
+        {% else %}
+            ticker = ticker.slice(Math.abs(pad));
+            ticker_x = ticker_x.slice(Math.abs(pad));
+        {% endif %}
+
+      }
+
+
+
+
+      
+
+
+
+
+      for (var i = 0; i < ticker.length; i++) {
+
+
+
+          var fx = "";
+
+          if(!!ticker_x[i]){
+            fx = ticker_x[i].toString();
+          }
+          dataTable.setCell(i,row,ticker[i],fx);
+
+          for (var x=0;x<diffSums.length;x++){
+
+            if(ticker[i] != null && dataTable.getValue(i,x+1) != null){
+              diffSums[x]+= Math.abs(ticker[i]-dataTable.getValue(i,x+1));
+            }
+          }
+
+          if(ticker[i] != null && dataTable.getValue(i,1) != null){
+            diffSum+= Math.abs(ticker[i]-dataTable.getValue(i,1));
+          }
+          try{
+            csv += dataTable.getValue(i,0).toISOString().slice(0,10)+","+dataTable.getValue(i,1).toString()+","+fx.toString()+"\n";
+          }catch(err){
+            console.log(err)
+          }
+
+      }
+
+      {% if hourly %}
+
+      dataTable.insertColumn(0,"datetime","date","Date");
+
+      for (var i=0;i < ticker.length;i++){
+        var d = new Date(dataTable.getFormattedValue(i,1));
+        var f = dataTable.getFormattedValue(i,1);
+        dataTable.setCell(i,0,d,f);
+      }
+
+      dataTable.removeColumn(1);
+
+      
+      {% endif %}
+      
+  {% endif %}
+
+  chart = new google.visualization.LineChart(document.getElementById('qt'));
+  var title = options.title.split(",");
+
+
+
+
+  if (diffSums.length > 1){
+    for (var x=0;x<diffSums.length;x++){
+      //title[x] += " ("+diffSums[x].toFixed(2).toString()+") ";
+      var r = spearson.correlation.pearson(getDataTableColumn(x+1),getDataTableColumn(x+2))
+      var rho = spearson.correlation.spearman(getDataTableColumn(x+1),getDataTableColumn(x+2))
+      title[x] += " (r="+r.toPrecision(6).toString()+", rho="+rho.toPrecision(6).toString()+") ";
+
+    }
+    options.title = title.join();
+  }else{
+    var r = spearson.correlation.pearson(getDataTableColumn(1),getDataTableColumn(2))
+    var rho = spearson.correlation.spearman(getDataTableColumn(1),getDataTableColumn(2))
+    options.title = options.title + " (r="+r.toPrecision(6).toString()+", rho="+rho.toPrecision(6).toString()+") ";
+  }
+  
+
+  tempTable = dataTable;
+  tempOptions = options;
+
+  
+
+  chart.draw(dataTable, options);
+
+  
+
+
+
+
+  
+  var text = '{{url}}';
+  var new_date = stepDate({{step}});
+  console.log(new_date.toJSON());
+  var newDate = new_date.toLocaleDateString('en-GB', {  
+    month : '2-digit',
+    year : 'numeric'
+  }).split(' ').join('/');
+
+  var newText = text.replace(/(date=)[^\&]+/, '$1' + newDate + " " + "12m"+"&step=-1");
+  $('#prev_date').prop("href",newText);
+
+
+  {% if complete_trend %}
+  console.log("hello from complete trend")
+
+  completeTrend();
+
+  {% else %}
+
+  showCorrelation(1,2);
+
+  {% endif %}
+
+
+
+
+
+}
+
+function completeTrend(){
+  var query_day = new google.visualization.Query(url_no_date+"&date=today 7-d");
+  query_day.send(handleCompleteTrend);
+}
+
+var completeTrend;
+var missing_days = [];
+function handleCompleteTrend(response){
+  completeTrend = response.getDataTable();
+  
+  var cx_day = "";
+  var cx_val = 0;
+  var cx_count = 0;
+  for (var i=0;i<completeTrend.getNumberOfRows();i++){
+    if(moment(completeTrend.getValue(i,0)).format("Y-MM-DD")!=cx_day){
+      if(cx_day != ""){
+        missing_days.push(cx_val/cx_count);
+        console.log(cx_day+":"+(cx_val/cx_count).toString());
+        console.log("----");
+
+      }
+      cx_day = moment(completeTrend.getValue(i,0)).format("Y-MM-DD");
+
+      console.log(cx_day);
+      cx_val = completeTrend.getValue(i,1);
+      cx_count = 1;
+    }else{
+      cx_val += completeTrend.getValue(i,1);
+      cx_count ++;
+    }
+
+  }
+
+  missing_days.push(cx_val/cx_count);
+  {% if frequency == 7 %}
+
+  console.log("hello week");
+
+  var week_av = missing_days.reduce(function(a, b) { return a + b; })/missing_days.length;
+
+  dataTable.setValue(dataTable.getNumberOfRows()-1,1,week_av);
+
+
+  {% else %}
+  
+  var has_scaled = false;
+
+  var mix = missing_days.length-1;
+  for (i=dataTable.getNumberOfRows()-1;i>0;i--){
+    if(dataTable.getValue(i,1) == null){
+      console.log(dataTable.getFormattedValue(i,0));
+      dataTable.setValue(i,1,missing_days[mix]);
+      mix --;
+
+
+    }else{
+      //console.log(dataTable.getValue(i,1)/missing_days[mix]);
+      var fact = dataTable.getValue(i,1)/missing_days[mix];
+      if(!has_scaled){
+        for (ii=1;ii<missing_days.length-mix;ii++){
+          console.log(dataTable.getValue(i+ii,1));
+          console.log(dataTable.getValue(i+ii,1)*fact);
+          dataTable.setValue(i+ii,1,dataTable.getValue(i+ii,1)*fact);
+        }
+        has_scaled = true;
+        
+      }
+    }
+  }
+  {% endif %}
+
+
+
+
+  chart.draw(dataTable,options);
+
+  showCorrelation(1,2);
+
+
+
+
+
+
+}
+
+  function addTrend(term){
+    var add_url = url_template.replace("xTRENDx",term);
+    console.log(add_url);
+    var query = new google.visualization.Query(add_url);
+    query.send(handleAddTrend);
+
+  }
+  var newTrendData;
+  var joined;
+
+  function handleAddTrend(response) {
+
+
+  //console.log();
+
+          newTrendData = response.getDataTable();
+
+          var existing = [];
+
+          for (var i = 0;i < dataTable.getNumberOfColumns()-1;i++){
+            existing.push(i+1)
+          }
+
+          dataTable = google.visualization.data.join(dataTable, newTrendData, 'full', [[0,0]], existing, [1]);
+          chart.draw(dataTable,options);
+  }
+
+var added_stock;
+var dtx,newDataTable;
+  function addStock(symbol) {
+    var add_url = "https://www.quandl.com/api/v3/datasets/WIKI/"+symbol+".json?qopts.columns=date,close&collapse=daily&api+key= Q6YzQTqA1mSKaaYL-Cb3&start_date="+moment(dataTable.getValue(0,0)).format("Y-MM-DD");
+
+
+    var hashed = {};
+    $.get(add_url,function(data){
+
+      var to_add = [];
+      
+      $(data.dataset.data).each(function(i){
+        hashed[$(this)[0]] = $(this)[4];
+        to_add.push($(this)[4]);
+      });
+
+      var ratio = Math.max.apply(Math, to_add) / 100;
+
+      dataTable.addColumn('number',symbol,symbol);
+
+
+
+      $.each(getDataTableColumn(0),function(i){
+
+        var date_key = moment(dataTable.getValue(i,0)).format("Y-MM-DD");
+        var cols = dataTable.getNumberOfColumns()-1;
+        if (date_key in hashed) {
+          dataTable.setCell(i,cols,Math.round(hashed[date_key]/ratio),hashed[date_key].toString());
+        }else{
+          if(i-1>-1){
+            dataTable.setCell(i,cols,dataTable.getValue(i-1,cols),dataTable.getFormattedValue(i-1,cols));
+          }else{
+
+          }
+          
+        }
+
+        
+      });
+
+      chart.draw(dataTable,options);
+
+
+
+    });
+
+
+
+
+  }
+
+
+  </script>
+  {% endif %}
+
+
+
+
+
+
+  </div>
+
+  <script type="text/javascript">
+  $(document).ready(function(){
+    $('a.gprop').click(function(){
+      var gprop = $("#gprop").html();
+      $('#gprop').html($(this).html());
+      $('#gprop-input').val($(this).attr("gprop"));
+      $(this).html(gprop);
+
+    });
+
+    $('a.timeframe').click(function(){
+      var date = $("#date-display").html();
+      $('#date-display').html($(this).html());
+      $('#input-date').val($(this).attr("date"));
+      $(this).html(date);
+
+    });
+
+
+    $('.combobox').combobox();
+  });
+  </script>
+
+  <script src="http://numericjs.com/numeric/lib/numeric-1.2.6.min.js" type="text/javascript"></script>
+  <script src="/static/js/diff.js"  type="text/javascript"></script>
+  <script src="http://bootstrap-combobox-test.herokuapp.com/js/bootstrap-combobox.js" type="text/javascript"></script>
+  </body>
+</html>
+

@@ -1,0 +1,45 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+libraries:
+- name: pytz
+  version: "2016.4"
+- name: numpy
+  version: "1.6.1"
+
+handlers:
+
+- url: /poly/bower_components
+  static_dir: poly/build/bundled/bower_components
+  secure: always
+
+- url: /poly/images
+  static_dir: poly/build/bundled/images
+  secure: always
+
+- url: /poly/src
+  static_dir: poly/build/bundled/src
+  secure: always
+
+- url: /poly/service-worker.js
+  static_files: poly/build/bundled/service-worker.js
+  upload: poly/build/bundled/service-worker.js
+  secure: always
+
+- url: /poly/manifest.json
+  static_files: poly/build/bundled/manifest.json
+  upload: poly/build/bundled/manifest.json
+  secure: always
+
+- url: /poly/.*
+  static_files: poly/build/bundled/index.html
+  upload: poly/build/bundled/index.html
+  secure: always
+
+- url: /static
+  static_dir: static
+
+
+- url: /.*
+  script: main.app

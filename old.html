@@ -1,0 +1,2 @@
+  <script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/863_RC25/embed_loader.js"></script> <script type="text/javascript"> trends.embed.renderExploreWidget("TIMESERIES", {"comparisonItem":[{% for k in keywords %}{"keyword":"{{k}}","geo":"{{geo}}","time":"{{start_date}}"}{% if not forloop.last %},{% endif %}{% endfor %}],"category":0,"property":""}, {"exploreQuery":"q={{trend_line}}&date=date={{start_date}}"}); </script> 
+      <a href="{{ trend_line }}">{{ trend_line }}</a>
