@@ -7,6 +7,8 @@ libraries:
   version: "2016.4"
 - name: numpy
   version: "1.6.1"
+- name: jinja2
+  version: "latest"
 
 handlers:
 
@@ -39,7 +41,6 @@ handlers:
 
 - url: /static
   static_dir: static
-
 
 - url: /.*
   script: main.app

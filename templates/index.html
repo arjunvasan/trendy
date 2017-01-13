@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Trendy!</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <style type="text/css">
+    div#bar{
+      text-align:center;
+      margin-top:48px;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <link href="http://bootstrap-combobox-test.herokuapp.com/css/bootstrap-combobox.css" media="screen" rel="stylesheet" type="text/css">
+
+  <link href="/static/css/xignite.css" media="screen" rel="stylesheet" type="text/css">
+</head>
+  <body>
+  <div class="container-fluid">
+    <div id="bar" class="row">
+      {% include 'query.html' %}
+    </div>
+    <div class="row">
+      <div id="qt" style="width:100%"></div>
+    </div>
+    <div class="row">
+      <div id="x" style="width:92%;margin-left:4%"></div>
+    </div>
+    {% if old %}
+      {% include 'old.html' %}
+    {% else %}
+      {% include 'footer.html' %}
+      {% include 'scripts.html' %}
+    {% endif %}
+  </div>
+  </body>
+</html>
+
