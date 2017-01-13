@@ -12,6 +12,8 @@ from google.appengine.api import urlfetch
 from datetime import datetime, timedelta
 from itertools import islice, tee
 
+from handlers import *
+
 intrinio_un = "f14a7f21a25d12f05be67615ac078841"
 intrinio_pw = "2c75726a36c24361e8aeb00b769904d1"
 
@@ -31,173 +33,6 @@ gDates = {
     "today 30-d":"Past 30 Days",
     "today 7-d":"Past 7 Days"
 }
-
-class BaseHandler(webapp2.RequestHandler):
-
-    @webapp2.cached_property
-    def jinja2(self):
-        # Returns a Jinja2 renderer cached in the app registry.
-        return jinja2.get_jinja2(app=self.app)
-
-    def render_response(self, _template, **context):
-        # Renders a template and writes the result to the response.
-        rv = self.jinja2.render_template(_template, **context)
-        self.response.write(rv)
-
-
-def moving_average(n, iterable):
-    # leading 0s
-    for i in range(1, n):
-        yield 0.
-
-    # actual averages
-    head, tail = tee(iterable)
-    sum_ = float(sum(islice(head, n)))
-    while True:
-        yield sum_ / n
-        sum_ += next(head) - next(tail)
-
-
-class BtcData(webapp2.RequestHandler):
-    def get(self):
-        request_url = "https://api.coindesk.com/v1/bpi/historical/close.json?start=2010-07-22&end=2017-12-30"
-        result = urlfetch.fetch(request_url)
-        ticker = json.loads(result.content)
-
-        csv = ["%s,%s" % (k,ticker["bpi"][k]) for k in sorted(ticker["bpi"])][::7]
-        csv_text = "<br>".join(csv)
-        ticker = [ticker["bpi"][k] for k in sorted(ticker["bpi"])][::7]
-
-        self.response.out.write(csv_text)
-
-
-class AddTrend(webapp2.RequestHandler):
-    def get(self):
-        q = self.request.get("q")
-        date = self.request.get("date")
-        geo = self.request.get("geo")
-        prop = self.request.get("prop")
-        request_url = 'https://www.google.com/trends/fetchComponent?q=%s&cid=TIMESERIES_GRAPH_0&export=3&date=%s&geo=%s&gprop=%s' % (q,date,geo,prop)
-        result = urlfetch.fetch(request_url)
-
-        self.response.out.write(result.content)
-
-
-class AddStock(webapp2.RequestHandler):
-    def get(self):
-
-        if stock:
-
-            if stock.lower() == "btc":
-                request_url = "https://api.coindesk.com/v1/bpi/historical/close.json?start=2010-07-17&end=2017-12-30"
-                result = urlfetch.fetch(request_url)
-                ticker = json.loads(result.content)
-                ticker = [ticker["bpi"][k] for k in sorted(ticker["bpi"])][::30]
-
-                ticker_x = ticker
-                ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-                ticker = [round(100*x,4)for x in ticker]
-
-            elif stock.lower() == "housing":
-                zipcode = self.request.get("zip")
-                if not zipcode:
-                    zipcode = "94041"
-                request_url = "https://www.quandl.com/api/v3/datasets/ZILL/Z%s_a.json" % zipcode
-                result = urlfetch.fetch(request_url)
-                ticker = result.content["data"][:157]
-
-                ticker = [ticker["data"][k] for k in sorted(ticker["data"])]
-
-                ticker_x = ticker
-                ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-                ticker = [round(100*x,4)for x in ticker]
-
-            elif stock.lower() == "gold":
-                request_url = "https://www.quandl.com/api/v3/datasets/COM/AU_LAM.json?api_key=Q6YzQTqA1mSKaaYL-Cb3&frequency=monthly"
-                result = urlfetch.fetch(request_url)
-                ticker = json.loads(result.content)
-                print ticker["dataset"]["data"]
-
-            else:
-                request_url = "https://api.intrinio.com/prices?identifier=%s&item=close&start_date=2004-01-01&frequency=monthly" % stock.upper()
-
-                print request_url
-
-                result = urlfetch.fetch(request_url,
-                                        headers={"Authorization": 
-                                                 "Basic %s" % base64.b64encode("f14a7f21a25d12f05be67615ac078841:2c75726a36c24361e8aeb00b769904d1")})
-
-                ticker = json.loads(result.content)
-                ticker = [x["close"] for x in ticker["data"]]
-                ticker.reverse()
-                ticker_x = ticker
-                ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-                ticker = [round(100*x,4)for x in ticker]
-        else:
-            ticker = []
-            ticker_x = []
-
-
-def getTicker(symbol):
-    if symbol:
-
-        if symbol.lower() == "btc":
-            request_url = "https://api.coindesk.com/v1/bpi/historical/close.json?start=2010-07-17&end=2017-12-30"
-            result = urlfetch.fetch(request_url)
-            ticker = json.loads(result.content)
-            ticker = [ticker["bpi"][k] for k in sorted(ticker["bpi"])][::30]
-
-            ticker_x = ticker
-            ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-            ticker = [round(100*x,4)for x in ticker]
-
-        elif symbol.lower() == "housing":
-            zipcode = self.request.get("zip")
-            print zipcode
-            if not zipcode:
-                zipcode = "94041"
-            request_url = "https://www.quandl.com/api/v3/datasets/ZILL/Z%s_a.json" % zipcode
-            result = urlfetch.fetch(request_url)
-            ticker = json.loads(result.content)["dataset"]["data"][:157]
-
-            ticker.reverse()
-            ticker = [t[1] for t in ticker]
-
-            ticker_x = ticker
-            ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-            ticker = [round(100*x,4)for x in ticker]
-
-        elif symbol.lower() == "gold":
-            request_url = "https://www.quandl.com/api/v3/datasets/COM/AU_LAM.json?api_key=Q6YzQTqA1mSKaaYL-Cb3&frequency=monthly"
-            result = urlfetch.fetch(request_url)
-            ticker = json.loads(result.content)
-            ticker = [t[1] for t in ticker["dataset"]["data"]][::30][:157]
-            ticker.reverse()
-            ticker_x = ticker
-            ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-            ticker = [round(100*x,4)for x in ticker]
-
-        else:
-            request_url = "https://api.intrinio.com/prices?identifier=%s&item=close&start_date=2004-01-01&frequency=monthly" % stock.upper()
-
-            print request_url
-
-            result = urlfetch.fetch(request_url,
-                                    headers={"Authorization": 
-                                             "Basic %s" % base64.b64encode("f14a7f21a25d12f05be67615ac078841:2c75726a36c24361e8aeb00b769904d1")})
-
-            ticker = json.loads(result.content)
-            ticker = [x["close"] for x in ticker["data"]]
-            ticker.reverse()
-            ticker_x = ticker
-            ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-            ticker = [round(100*x,4)for x in ticker]
-    else:
-        ticker = []
-        ticker_x = []
-
-    return ticker,ticker_x
-
 
 class MainPage(BaseHandler):
     def get(self):
@@ -419,7 +254,5 @@ class MainPage(BaseHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/btc', BtcData),
-    ('/addTrend', AddTrend)
+    ('/', MainPage)
 ], debug=True)
