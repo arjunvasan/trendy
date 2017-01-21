@@ -1,13 +1,20 @@
 <nav style="padding-top:8px" class="navbar navbar-default navbar-fixed-top">
-  <form class="form-inline">
+  <form class="form-inline" method="GET" action="/trendy">
     <div class="form-group">
-      <label for="search">Terms:</label>
-      <input type="text" class="form-control" id="search" value="{{trend_clean}}" name="trend_line" placeholder="Jane Doe">
+      <a href="/trendy"><i id="icon" class="fa fa-home" style=""></i></a><a href="#"><i id="icon" class="fa fa-info" style=""></i></a>
     </div>
-    <div class="form-group">
-      <label for="exampleInputEmail2">Stock:</label>
-      <input type="text" class="form-control xignite-typeahead" data-xignite-typeahead-key="XigniteFinancials.GetCompanyBalanceSheet.Identifier" autocomplete="off" id="stock" name="stock" value="{{stock}}" placeholder="AMZN">
+    <div class="form-group input-group">
+        <span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+      <input type="text" class="form-control" id="search" value="" name="q" placeholder="+ search term">
     </div>
+    <input type="hidden" name="default_q" value="{{trend_line}}" />
+    <div class="form-group input-group" id="bloodhound">
+    <span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-usd" aria-hidden="true"></span></span>
+      <input type="text" class="form-control typeahead" data-xignite-typeahead-key="XigniteFinancials.GetCompanyBalanceSheet.Identifier" autocomplete="off" id="stock" name="x" value="" placeholder="+ stock symbol">
+    </div>
+    <input type="hidden" name="default_x" value="{{stock}}" />
+    <input type="hidden" id='add_trends' name="add_trends" value="{{add_trends|join(',')}}" />
+    <input type="hidden" id='add_stocks' name="add_stocks" value="{{add_stocks|join(',')}}" />
     <div class="btn-group">
       <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <a id="date-display">2004 > Today</a> <span class="caret"></span>
@@ -342,6 +349,20 @@
         <option value="US-WY">US/Wyoming</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-default">Draw Chart</button>
+
+    <!-- Split button -->
+    <div class="btn-group">
+      <button type="submit" class="btn btn-default">Draw Chart</button>
+      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="caret"></span>
+        <span class="sr-only">Toggle Dropdown</span>
+      </button>
+      <ul class="dropdown-menu">
+        <li><a type='submit' href="#">Draw Chart</a></li>
+        <li><a data-toggle="modal" data-target="#myModal" id='export_json' href="#">Export JSON</a></li>
+        <li><a data-toggle="modal" data-target="#myModal" id='export_csv' href="#">Export CSV</a></li>
+      </ul>
+    </div>
+
   </form>
 </nav>

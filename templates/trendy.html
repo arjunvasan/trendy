@@ -1,0 +1,34 @@
+<div class="jumbotron-content">
+  <h1>Try your own..</h1>
+  <p class="jumbotron-lg-only"></p>
+  <form class="form-horizontal right" role="form" method="GET" action="/trendy">
+  	<div class="form-group">
+  		<label for="search" class="col-md-3 control-label">Terms:</label>
+  		<div class="col-md-9">
+  			<input type="text" class="form-control" id="search" value="" name="q" placeholder="+ search term(s)">
+  		</div>
+  	</div>
+  	<div class="form-group">
+  		<label for="stock" class="col-md-3 control-label">Stock:</label>
+  		<div class="col-md-9" id="bloodhound">
+  			<input type="text" class="form-control typeahead" id="stock" name="x" value="" placeholder="+ stock symbol">
+  		</div>
+  	</div>
+  	<div class="form-group">
+  		<div class="col-md-offset-3 col-md-9">
+  			<button type="submit" class="btn btn-default pull-right">Draw Chart</button>
+  		</div>
+  	</div>
+  </form>
+</div>
+
+<h1>Hi, I'm Trendy!</h1>
+<div class="rightside">
+	<p>I can overlay google trends with other time series. I know stock prices, bitcoin, gold price and a bit about housing. Soon, you can upload your own series. You can read more about me <a href="/r/trendy">here</a>. Try your own comparison on the right, or try some of the ones below: </p>
+	<ul>
+		<li><a href="trendy?q=coinbase&x=BTC"><b>ɃTC</b> vs "coinbase"</a></li>
+		<li><a href="trendy?q=shale%2Bfracking&x=XES"><b>XES</b> (shale ETF) vs "shale+fracking"</a> </li>
+		<li><a href="trendy?q=amazon stock&x=amzn"><b>AMZN</b> vs "amazon stock"</a></li>
+		<li><a href="trendy?q=zillow&x=housing&zip=94041">Bay Area housing prices vs "zillow"</a></li>
+	</ul>
+</div>

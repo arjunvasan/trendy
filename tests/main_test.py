@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc. All rights reserved.
+# Copyright 2016 Arjun Vasan, All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,10 @@
 # limitations under the License.
 
 import webtest
-
 import main
-
 
 def test_get():
     app = webtest.TestApp(main.app)
-
     response = app.get('/')
-
     assert response.status_int == 200
     assert response.body == 'Hello, World!'

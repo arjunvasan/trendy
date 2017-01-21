@@ -1,0 +1,63 @@
+﻿; Domain: arjunvasan.com
+; Exported (y-m-d hh:mm:ss): 2017-01-14 15:51:11
+;
+; This file is intended for use for informational and archival
+; purposes ONLY and MUST be edited before use on a production
+; DNS server.
+;
+; In particular, you must update the SOA record with the correct
+; authoritative name server and contact e-mail address information,
+; and add the correct NS records for the name servers which will
+; be authoritative for this domain.
+;
+; For further information, please consult the BIND documentation
+; located on the following website:
+;
+; http://www.isc.org/
+;
+; And RFC 1035:
+;
+; http://www.ietf.org/rfc/rfc1035.txt
+;
+; Please note that we do NOT offer technical support for any use
+; of this zone data, the BIND name server, or any other third-
+; party DNS software.
+;
+; Use at your own risk.
+
+; SOA Record
+arjunvasan.com.	600	IN	SOA	ns47.domaincontrol.com.	dns.jomax.net (
+				2017011423
+				28800
+				7200
+				604800
+				600
+				)
+
+; A Records
+@	3600	IN	A	216.239.36.21
+@	3600	IN	A	216.239.34.21
+@	3600	IN	A	216.239.38.21
+@	3600	IN	A	216.239.32.21
+
+; CNAME Records
+www	3600	IN	CNAME	ghs.googlehosted.com
+*	3600	IN	CNAME	ghs.googlehosted.com
+
+; MX Records
+@	3600	IN	MX	0	smtp.secureserver.net
+@	3600	IN	MX	10	mailstore1.secureserver.net
+
+; TXT Records
+@	3600	IN	TXT	"google-site-verification=DqAaAGzUPFQhY4lY5D8mkRhxJCMvNmPzZZi_Sqe5or8"
+@	3600	IN	TXT	"google-site-verification=qmA6fFKIR8_hlumpes0Q2CPlcUbteOXCinmUgiSCTWc"
+
+; AAAA Records
+@	3600	IN	AAAA	2001:4860:4802:32::15
+@	3600	IN	AAAA	2001:4860:4802:36::15
+@	3600	IN	AAAA	2001:4860:4802:38::15
+@	3600	IN	AAAA	2001:4860:4802:34::15
+
+; NS Records
+@	3600	IN	NS	ns48.domaincontrol.com
+@	3600	IN	NS	ns47.domaincontrol.com

@@ -1,0 +1,249 @@
+<style type="text/css">
+	@import url(https://fonts.googleapis.com/css?family=Open+Sans:400);
+
+	body {
+	  font-family: 'Open Sans', sans-serif;
+	  height: 100%;
+	}
+
+	h2 { margin: 0; }
+
+
+	.jumbotron {
+	  margin-top: 32px;
+	  position: relative;
+	  min-height: 400px;
+	  background-size: 100%;
+	  padding: 10px;
+	}
+
+	.jumbotron-content {
+	  position: absolute;
+	  right: 0;
+	  top: 0;
+	  padding: 0px 15px;
+	  padding-top:45px;
+	  width: 25%;
+	  height: 100%;
+	  background-color: #000;
+	  background-color: rgba(0, 0, 0, 0.66);
+	  border-radius: 0px;
+	  border-top-right-radius: 5px;
+	  border-bottom-right-radius: 5px;
+	}
+
+	{% if page == 'locked.html' %}
+	.jumbotron-content { background-color: #8B0000;}
+	{% endif %}
+
+	.jumbotron-content h1 {
+	  text-align: center;
+	  color: #fff;
+	  font-size: 1.75em;
+	  margin-bottom: 0.5em;
+	}
+
+	.jumbotron-content p {
+	  margin-top: 0;
+	  color: #fff;
+	  font-size: 1.2em;
+	}
+
+	.jumbotron-content label {
+	  color: #fff;
+	}
+
+	.jumbotron .img-credit {
+	  color: #bbb;
+	  background-color: #000;
+	  background-color: rgba(0, 0, 0, 0.5);
+	  font-size: 10px;
+	  margin: 5px;
+	  padding: 3px;
+	  position: absolute;
+	  bottom: 0;
+	  left: 0;
+	}
+
+	.jumbotron .img-credit a, .jumbotron .img-credit a:hover {
+	  color: #fff;
+	}
+
+	.jumbotron .btn {
+	  padding: 5px 5%;
+	  margin: 0 3%;
+	}
+
+	@media(min-width: 992px) {
+	  .jumbotron .btn {
+	    padding: 5px 10%;
+	  }
+	}
+
+	@media(max-width: 991px) {
+	  .jumbotron-content {
+	    position: absolute;
+	    height: 100%;
+	  }
+
+	  .jumbotron-lg-only {
+	    display: none;
+	  }
+	}
+
+	div.rightside{
+		width:70%;
+	}
+	div.mobile-top{
+		display:none;
+	}
+
+	@media(max-width: 768px) {
+	  .jumbotron {
+	    background-size: 100% 100%;
+	  }
+	  body{
+	  	background-color: black;
+	  }
+
+	  .jumbotron-content {
+	    top: 0;
+	    height: 100%;
+	    width: 100%;
+	    display:none;
+	  }
+	  
+	  .jumbotron .btn {
+	    font-size: 0.85em;
+	    padding: 8px 5%;
+	    max-width: 65px;
+	  }
+	  div.rightside{
+	  	width:100%;
+	  }
+	  div.mobile-top{
+	  	display:block;
+	  }
+	  
+	}
+
+	@media(min-device-width: 320px) and (max-device-width: 568px) {
+	  .jumbotron {
+	    min-height: 275px;
+	  }
+
+	  .jumbotron-content {
+	    width: 100%;
+	    height: 100%;
+	  }
+
+	  .jumbotron .img-credit {
+	    display: none;
+	  }
+	}
+	div.top{
+		margin-top:24px;
+	}
+	
+	form.right{
+		margin-top:30px;
+	}
+	h4.navi{
+		padding-left:60px;
+		line-height: 1.0;
+	}
+	h5.cr{
+		margin-top:0px;
+		margin-right:42px;
+	}
+	h5#quote{
+		margin-left:60px;
+		color:#666;
+	}
+	div.pad-bottom{padding-bottom:36px;}
+	div.author{
+		margin-top:3px;
+	}
+
+	b.symbol{
+		color:#336699;
+	}
+
+
+
+</style>
+<div class="container top pad-bottom">
+	<h4 class='navi'><a class='text-info' href="https://arjunvasan.com">arjunvasan</a> <a href="https://arjunvasan.com{{path}}" class='text-info'>{{path}}</a></h4>
+	<div class="jumbotron">
+		{% include page %}
+	</div>
+	<h5 class='pull-right text-muted cr'>Copyright © 2017 • Arjun Vasan</h5>
+	<h5 id='quote'></h5>
+	
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="/static/js/xignite.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script src="/static/js/typeahead.bundle.min.js"></script>
+<script type="text/javascript">
+var stocks = [];
+
+
+var suggest = function(ob){
+	return "<div><b class='symbol'>"+ob.Symbol+"</b> - "+ob.Name+"</div>";
+}
+  $(document).ready(function(){
+
+
+    //$(".xignite-typeahead").xigniteTypeahead({ api: "https://search.xignite.com/Search/Suggest", keyParam: "parameter", q: "term" });
+
+    stocks = new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.obj.whitespace(['Symbol','Name']),
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      // `states` is an array of state names defined in "The Basics"
+      prefetch: '/static/symbols.json'
+    });
+
+    stocks.initialize();
+
+    $('#bloodhound .typeahead').typeahead({
+      hint: true,
+      highlight: true,
+      minLength: 1
+    },
+    {
+      name: 'stock',
+      source: stocks,
+      limit: 25,
+      display: 'Symbol',
+      templates: {
+      	suggestion: suggest
+      }
+    });
+
+
+
+    /*
+    $.ajax({
+        url: 'https://andruxnet-random-famous-quotes.p.mashape.com/',
+        type: 'post',
+        data: {
+            access_token: 'XXXXXXXXXXXXXXXXXXX'
+        },
+        headers: {
+            "X-Mashape-Key":"uMhziQBVjCmshpNQ6tljqM8tNY2Pp17Hb8djsncgO78TWVvC2p",
+            "Content-Type":"application/x-www-form-urlencoded",
+            "Accept":"application/json" 
+        },
+        dataType: 'json',
+        success: function (data) {
+            console.info(data);
+            //$('#quote').html(''+data.quote + ' <div class="author"><small>'+data.author+"</small></div>");
+        }
+    });
+    */
+
+  });
+</script>

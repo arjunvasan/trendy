@@ -3,4 +3,4 @@
 :Author: `Arjun Vasan <arjun.vasan@gmail.com>`_
 """
 
-from handlers.base import BaseHandler
+from handlers.base import *

@@ -1,41 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Trendy!</title>
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <style type="text/css">
-    div#bar{
-      text-align:center;
-      margin-top:48px;
-    }
-    html, body {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <link href="http://bootstrap-combobox-test.herokuapp.com/css/bootstrap-combobox.css" media="screen" rel="stylesheet" type="text/css">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{page_title}}</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style type="text/css">
+      html, body {
+        width: 100%;
+        height: 100%;
+      }
+      div#bar{
+        text-align:center;
+        margin-top:48px;
+      }
+      div#qt {
+        width:100%;
+      }
+      div#x {
+        width:92%;
+        margin-left:4%;
+      }
+      i#icon{
+        text-shadow: none; 
+        font-size: 28px; 
+        color: black; 
+        height: 36px; width: 28px; 
+        line-height: 36px; border-radius: 4%; 
+        text-align: center; 
+        background-color: transparent;
+        margin-right:4px;
+      }
+      i#icon:hover{
+        
+        color:rgb(68, 167, 235);
+      }
+      textarea#export{
+        width:100%;
+        height:300px;
+      }
+      a.side{
+        color:#ADD8E6;
+      }
+      a.side:hover{
+        color:white;
+        text-decoration: none;
+      }
+      a#date_display_x{
+        font-weight:bold;
+        color:#333;
+      }
+      #qt g g g text {
+          cursor: pointer
+      }
+      #qt g g g text:hover {
+          background-color:red;
+      }
 
-  <link href="/static/css/xignite.css" media="screen" rel="stylesheet" type="text/css">
-</head>
+      b.symbol{
+        color:#336699;
+      }
+
+      .tt-menu {
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> 
+
+
+    <link href="https://bootstrap-combobox-test.herokuapp.com/css/bootstrap-combobox.css" media="screen" rel="stylesheet" type="text/css">
+    <link href="/static/css/xignite.css" media="screen" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+  </head>
   <body>
-  <div class="container-fluid">
-    <div id="bar" class="row">
-      {% include 'query.html' %}
+    <div class="container-fluid">
+      
+
+      {% if trend_line %}
+
+        <div id="bar" class="row">
+          {% include 'query.html' %}
+        </div>
+        <div class="row">
+          <div id="qt" style="width:100%"></div>
+        </div>
+        <div class="row">
+          <div id="x" style="width:92%;margin-left:4%"></div>
+        </div>
+
+        {% if old %}
+          {% include 'old.html' %}
+        {% else %}
+          {% include 'footer.html' %}
+          {% include 'scripts.html' %}
+        {% endif %}
+
+      {% else %}
+
+        {% include 'jumbo.html' %}
+
+      {% endif %}
+
     </div>
-    <div class="row">
-      <div id="qt" style="width:100%"></div>
-    </div>
-    <div class="row">
-      <div id="x" style="width:92%;margin-left:4%"></div>
-    </div>
-    {% if old %}
-      {% include 'old.html' %}
-    {% else %}
-      {% include 'footer.html' %}
-      {% include 'scripts.html' %}
-    {% endif %}
-  </div>
+
+    <div class="modal fade" tabindex="-1" id="myModal" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Export > <span id='export_format'></span></h4>
+          </div>
+          <div class="modal-body">
+            <textarea id="export" onclick="this.select()"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
   </body>
 </html>
 

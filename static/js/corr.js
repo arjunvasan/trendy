@@ -1,4 +1,3 @@
-
 function CrossCorrelate(x,y,maxdelay){
    var n = x.length;
    var i,j;
@@ -34,20 +33,9 @@ function CrossCorrelate(x,y,maxdelay){
             continue;
          else
             sxy += (x[i] - mx) * (y[j] - my);
-         /* Or should it be (?)
-         if (j < 0 || j >= n)
-            sxy += (x[i] - mx) * (-my);
-         else
-            sxy += (x[i] - mx) * (y[j] - my);
-         */
       }
       r = sxy / denom;
       corr.push(r);
-      
-      /* r is the correlation coefficient at "delay" */
-
    }
    return corr;
-
-
 }

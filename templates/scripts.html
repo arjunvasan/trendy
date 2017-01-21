@@ -3,60 +3,90 @@
 
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="http://momentjs.com/downloads/moment.min.js"></script>
+<script src="https://momentjs.com/downloads/moment.min.js"></script>
 
 <script type="text/javascript" src="/static/js/spearson.js"></script>/
 <script type="text/javascript" src="/static/js/corr.js"></script>
 
-<script src="http://numericjs.com/numeric/lib/numeric-1.2.6.min.js" type="text/javascript"></script>
+<script src="/static/js/numeric.js" type="text/javascript"></script>
 <script src="/static/js/diff.js"  type="text/javascript"></script>
-<script src="http://bootstrap-combobox-test.herokuapp.com/js/bootstrap-combobox.js" type="text/javascript"></script>
+<script src="https://bootstrap-combobox-test.herokuapp.com/js/bootstrap-combobox.js" type="text/javascript"></script>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-<script src="/static/js/xignite.js"></script>
+<script src="/static/js/typeahead.bundle.min.js"></script>
+
 
 <script type="text/javascript">
 google.load('visualization', '1', {packages:["corechart"]});
 google.setOnLoadCallback(queryInit);
 var url = 'https://www.google.com/trends/fetchComponent?q={{trend_line}}&cid=TIMESERIES_GRAPH_0&export=3{% if not hide_date %}&date={{start_date}}{% endif %}{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
 
+var trends_query = {
+  q:"{{trend_line}}",
+  date:"{{start_date}}",
+  geo:"{{geo}}",
+  gprop:"{{gprop}}"
+}
+
 var url_template = 'https://www.google.com/trends/fetchComponent?q=xTRENDx&cid=TIMESERIES_GRAPH_0&export=3{% if not hide_date %}&date={{start_date}}{% endif %}{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
 
 var url_no_date = 'https://www.google.com/trends/fetchComponent?q={{trend_line}}&cid=TIMESERIES_GRAPH_0&export=3{% if geo %}&geo={{geo}}{% endif %}{% if gprop %}&gprop={{gprop}}{% endif %}';
 
+var cached_data = "";
+
 function queryInit(){
-  console.log(url);
-  var query = new google.visualization.Query(url)
-  query.send(handleQueryResponse);
+  if(cached_data != ""){
+    dataTable = new google.visualization.DataTable(cached_data);
+
+    drawChart();
+
+  }else{
+    var query = new google.visualization.Query(url)
+    query.send(handleQueryResponse);
+  }
+  
 }
 
+
+function decode(query_string) {
+    var textArea = document.createElement('textarea');
+    textArea.innerHTML = query_string;
+    return textArea.value;
+}
+
+
+var qs = decode("{{qs}}");
+
 var dataTable = [];
-var options = {};
+var options = {
+          title: '',
+          height:420,
+          curveType:'function',
+          legend: { position: 'top' },
+          focusTarget: 'category',
+          series: {
+            1: { lineDashStyle: [4,1],
+                  lineWidth:2 }
+          }
+        };
+
 var rx = [];
 var chart;
+var shifted = false;
 
 var movingWindowAvg = function(arr, step) {
         return arr.map(function(_, idx) { 
           var wnd = arr.slice(idx - step, idx + step + 1); 
           var result = d3.sum(wnd) / wnd.length; if (isNaN(result)) { result = _; }
-          console.log(_)
+          //console.log(_)
           return result;
         });
       };
 
 function handleQueryResponse(response) {
 
-        options = {
-          title: '{{ trend_clean }}',
-          height:500,
-          curveType:'function',
-          legend: { position: 'right' },
-          series: {
-            1: { lineDashStyle: [4,1],
-                  lineWidth:2 }
-          }
-        };
+        
         dataTable = response.getDataTable();
 
         rx = response;
@@ -83,6 +113,8 @@ var td = "{{ticker_dict}}";
 
 var ticker = {{ticker}};
 var ticker_x = {{ticker_x}};
+var original_ticker = {{ticker}};
+var last_date = "{{last_date}}";
 
 var diffSum = 0;
 var diffSums = [];
@@ -125,6 +157,7 @@ function showDiff(x){
 }
 
 var crossTable;
+var corrVals = "";
 
 function showCorrelation(x,y){
   var r = dataTable.getNumberOfRows();
@@ -144,10 +177,21 @@ function showCorrelation(x,y){
 
   var xchart = new google.visualization.LineChart(document.getElementById('x'));
 
+  var r = spearson.correlation.pearson(getDataTableColumn(x),getDataTableColumn(y))
+  var rho = spearson.correlation.spearman(getDataTableColumn(x),getDataTableColumn(y))
+  corrVals = " r="+r.toPrecision(4).toString()+" • ρ="+rho.toPrecision(4).toString()+" ";
+
+
+
   var x_options = {
-    title: 'Cross Correlation',
+    title: dataTable.getColumnLabel(x) + " ⭑ "+ dataTable.getColumnLabel(y)+" ( "+ corrVals+" )",
+    titleTextStyle: {
+      color:'#555',
+      bold:false
+    },
+    //chartArea:{left:64,right:60,top:20},
     height:200,
-    legend: { position: 'right' }
+    legend: { position: 'none' }
   };
 
   xchart.draw(crossTable,x_options);
@@ -166,136 +210,131 @@ function getDataTableColumn(n) {
 
 function stepDate(step){
   //var hello = dataTable.getValue(0,0);
+  var fq = {{frequency}};
   var current_date = new Date();
   step = step - 1;
 
-  current_date.setFullYear(current_date.getFullYear() + step);
+  if (fq == 30){
+    current_date.setFullYear(current_date.getFullYear() + step);
+  }else if (fq == 7){
+    current_date.setFullYear(current_date.getFullYear() + step);
+  }else if (fq == 1){
+    current_date.setFullYear(current_date.getFullYear() + step);
+  }
+  
 
   return current_date;
 
 
 }
 
-var tempTable;
-var tempOptions;
+
 var ticker_time = ['{{ticker_time}}'];
 
 function drawChart(){
 
   {% if stock %}
+      if (cached_data == ""){
 
-      dataTable.addColumn("number","{{stock}}","stock0");
+        dataTable.addColumn("number","{{stock}}","stock0");
 
-      var row = dataTable.getNumberOfColumns() - 1;
-
-
-      for (var i = 0;i < dataTable.getNumberOfColumns()-2;i++){
-        diffSums.push(0);
-      }
-
-      var pad = dataTable.getNumberOfRows() - ticker.length;
+        var row = dataTable.getNumberOfColumns() - 1;
 
 
-      {% if average %}
-          ticker = movingWindowAvg(ticker,{{average}});
-
-      {% endif %}
-
-
-      if(pad > 0){
-
-        for (var i=0;i<pad;i++){
-          ticker.unshift(null);
-          ticker_x.unshift(null);
+        for (var i = 0;i < dataTable.getNumberOfColumns()-2;i++){
+          diffSums.push(0);
         }
 
-      }else if (pad < 0){
+        var pad = dataTable.getNumberOfRows() - ticker.length;
 
-        {% if step %}
-            console.log(ticker)
-            var start = Math.abs(pad)-(dataTable.getNumberOfRows()*Math.abs({{step}}));
-            var end = start + dataTable.getNumberOfRows();
-            ticker = ticker.slice(start,end);
-            console.log(ticker)
-            ticker_x = ticker_x.slice(start,end);
-        {% else %}
-            ticker = ticker.slice(Math.abs(pad));
-            ticker_x = ticker_x.slice(Math.abs(pad));
+
+        {% if average %}
+            ticker = movingWindowAvg(ticker,{{average}});
+
+        {% endif %}
+
+        //console.log(pad);
+        if(pad > 0){
+          //console.log("trend longer than ticker")
+          for (var i=0;i<pad;i++){
+            ticker.unshift(null);
+            ticker_x.unshift(null);
+          }
+
+        }else if (pad < 0){
+          //console.log("ticker longer than trend")
+
+          {% if step %}
+              //console.log(ticker)
+              var start = Math.abs(pad)-(dataTable.getNumberOfRows()*Math.abs({{step}}));
+              var end = start + dataTable.getNumberOfRows();
+              ticker = ticker.slice(start,end);
+              //console.log(ticker)
+              ticker_x = ticker_x.slice(start,end);
+          {% else %}
+              ticker = ticker.slice(Math.abs(pad));
+              ticker_x = ticker_x.slice(Math.abs(pad));
+          {% endif %}
+
+        }
+
+        for (var i = 0; i < ticker.length; i++) {
+
+            var fx = "";
+
+            if(!!ticker_x[i]){
+              fx = ticker_x[i].toString();
+            }
+            dataTable.setCell(i,row,ticker[i],fx);
+
+            for (var x=0;x<diffSums.length;x++){
+
+              if(ticker[i] != null && dataTable.getValue(i,x+1) != null){
+                diffSums[x]+= Math.abs(ticker[i]-dataTable.getValue(i,x+1));
+              }
+            }
+
+            if(ticker[i] != null && dataTable.getValue(i,1) != null){
+              diffSum+= Math.abs(ticker[i]-dataTable.getValue(i,1));
+            }
+            try{
+              csv += dataTable.getValue(i,0).toISOString().slice(0,10)+","+dataTable.getValue(i,1).toString()+","+fx.toString()+"\n";
+            }catch(err){
+              console.log(err)
+            }
+
+        }
+
+        {% if hourly %}
+
+        dataTable.insertColumn(0,"datetime","date","Date");
+
+        for (var i=0;i < ticker.length;i++){
+          var d = new Date(dataTable.getFormattedValue(i,1));
+          var f = dataTable.getFormattedValue(i,1);
+          dataTable.setCell(i,0,d,f);
+        }
+
+        dataTable.removeColumn(1);
+
+        
         {% endif %}
 
       }
-
-      for (var i = 0; i < ticker.length; i++) {
-
-          var fx = "";
-
-          if(!!ticker_x[i]){
-            fx = ticker_x[i].toString();
-          }
-          dataTable.setCell(i,row,ticker[i],fx);
-
-          for (var x=0;x<diffSums.length;x++){
-
-            if(ticker[i] != null && dataTable.getValue(i,x+1) != null){
-              diffSums[x]+= Math.abs(ticker[i]-dataTable.getValue(i,x+1));
-            }
-          }
-
-          if(ticker[i] != null && dataTable.getValue(i,1) != null){
-            diffSum+= Math.abs(ticker[i]-dataTable.getValue(i,1));
-          }
-          try{
-            csv += dataTable.getValue(i,0).toISOString().slice(0,10)+","+dataTable.getValue(i,1).toString()+","+fx.toString()+"\n";
-          }catch(err){
-            console.log(err)
-          }
-
-      }
-
-      {% if hourly %}
-
-      dataTable.insertColumn(0,"datetime","date","Date");
-
-      for (var i=0;i < ticker.length;i++){
-        var d = new Date(dataTable.getFormattedValue(i,1));
-        var f = dataTable.getFormattedValue(i,1);
-        dataTable.setCell(i,0,d,f);
-      }
-
-      dataTable.removeColumn(1);
-
-      
-      {% endif %}
       
   {% endif %}
 
   chart = new google.visualization.LineChart(document.getElementById('qt'));
-  var title = options.title.split(",");
+  google.visualization.events.addListener(chart, 'ready', chartReadyHandler);
 
-  if (diffSums.length > 1){
-    for (var x=0;x<diffSums.length;x++){
-      //title[x] += " ("+diffSums[x].toFixed(2).toString()+") ";
-      var r = spearson.correlation.pearson(getDataTableColumn(x+1),getDataTableColumn(x+2))
-      var rho = spearson.correlation.spearman(getDataTableColumn(x+1),getDataTableColumn(x+2))
-      title[x] += " (r="+r.toPrecision(6).toString()+", rho="+rho.toPrecision(6).toString()+") ";
-
-    }
-    options.title = title.join();
-  }else{
-    var r = spearson.correlation.pearson(getDataTableColumn(1),getDataTableColumn(2))
-    var rho = spearson.correlation.spearman(getDataTableColumn(1),getDataTableColumn(2))
-    options.title = options.title + " (r="+r.toPrecision(6).toString()+", rho="+rho.toPrecision(6).toString()+") ";
-  }
-  
-
-  tempTable = dataTable;
-  tempOptions = options;
 
   chart.draw(dataTable, options);
 
+  google.visualization.events.addListener(chart, 'select', selectHandler );
+
   var text = '{{url}}';
-  var new_date = stepDate({{step}});
-  console.log(new_date.toJSON());
+  var new_date = stepDate(-1);
+  //console.log(new_date.toJSON());
   var newDate = new_date.toLocaleDateString('en-GB', {  
     month : '2-digit',
     year : 'numeric'
@@ -306,16 +345,47 @@ function drawChart(){
 
 
   {% if complete_trend %}
-  console.log("hello from complete trend")
+  //console.log("hello from complete trend")
 
   completeTrend();
 
   {% else %}
 
   showCorrelation(1,2);
+  $.post("/datatable",{json:dataTable.toJSON(),csv:google.visualization.dataTableToCsv(dataTable),url:qs},function(data){
+
+  });
+
 
   {% endif %}
 
+  {% for stock in add_stocks %}
+    {% if stock %}
+      addStock("{{stock}}");
+    {% endif %}
+  {% endfor %}
+
+  {% for trend in add_trends %}
+    {% if trend %}
+    addTrend("{{trend}}");
+    {% endif %}
+  {% endfor %}
+
+}
+
+function selectHandler(){
+  var sel = chart.getSelection();
+  // if selection length is 0, we deselected an element
+  if (sel.length > 0) {
+      // if row is undefined, we clicked on the legend
+      if (sel[0].row == null) {
+        if (shifted) {
+          dataTable.removeColumn(sel[0].column);
+          chart.draw(dataTable,options)
+        }
+        
+      }
+  }
 }
 
 function completeTrend(){
@@ -335,13 +405,11 @@ function handleCompleteTrend(response){
     if(moment(completeTrend.getValue(i,0)).format("Y-MM-DD")!=cx_day){
       if(cx_day != ""){
         missing_days.push(cx_val/cx_count);
-        console.log(cx_day+":"+(cx_val/cx_count).toString());
-        console.log("----");
 
       }
       cx_day = moment(completeTrend.getValue(i,0)).format("Y-MM-DD");
 
-      console.log(cx_day);
+      //console.log(cx_day);
       cx_val = completeTrend.getValue(i,1);
       cx_count = 1;
     }else{
@@ -354,7 +422,6 @@ function handleCompleteTrend(response){
   missing_days.push(cx_val/cx_count);
   {% if frequency == 7 %}
 
-  console.log("hello week");
 
   var week_av = missing_days.reduce(function(a, b) { return a + b; })/missing_days.length;
 
@@ -368,22 +435,15 @@ function handleCompleteTrend(response){
   var mix = missing_days.length-1;
   for (i=dataTable.getNumberOfRows()-1;i>0;i--){
     if(dataTable.getValue(i,1) == null){
-      console.log(dataTable.getFormattedValue(i,0));
       dataTable.setValue(i,1,missing_days[mix]);
       mix --;
-
-
     }else{
-      //console.log(dataTable.getValue(i,1)/missing_days[mix]);
       var fact = dataTable.getValue(i,1)/missing_days[mix];
       if(!has_scaled){
         for (ii=1;ii<missing_days.length-mix;ii++){
-          console.log(dataTable.getValue(i+ii,1));
-          console.log(dataTable.getValue(i+ii,1)*fact);
           dataTable.setValue(i+ii,1,dataTable.getValue(i+ii,1)*fact);
         }
         has_scaled = true;
-        
       }
     }
   }
@@ -392,13 +452,62 @@ function handleCompleteTrend(response){
   chart.draw(dataTable,options);
 
   showCorrelation(1,2);
+
+  $.post("/datatable",{json:dataTable.toJSON(),csv:google.visualization.dataTableToCsv(dataTable),url:qs},function(data){
+
+  });
 }
 
+
+  function chartReadyHandler(){
+    $('#qt g g g rect:first').attr("width","0");
+    $('#qt g:first g rect').each(function(){
+      $(this).attr({
+        "width":parseInt($(this).attr("width"))+12,
+        "height":parseInt($(this).attr("height"))+8,
+        "x":parseInt($(this).attr("x"))-6,
+        "y":parseInt($(this).attr("y"))-4,
+        "rx":3,
+        "ry":3,
+        "fill-opacity":"0.1"
+      })
+    });
+    $('#qt g:first g rect:first').attr({"fill":"#336699","stroke":'red'});
+
+    $('#qt g g g text').click(function(evt){
+      var rect = $(this).parent().parent().find("rect");
+
+      
+      try{
+        var i = $('#qt g:first g rect[stroke="red"]').index("#qt g:first g rect");
+        //console.log(i);
+        showCorrelation(i+1,rect.index("#qt g:first g rect")+1);
+      }catch(err){
+
+      }
+      
+      $('#qt g:first g rect[stroke="red"]').attr({"fill":"white",
+        "stroke":"white"});
+      rect.attr({"fill":"#336699","stroke":'red'});
+    });
+  }
+
   function addTrend(term){
+
     var add_url = url_template.replace("xTRENDx",term);
-    console.log(add_url);
+    //console.log(add_url);
     var query = new google.visualization.Query(add_url);
     query.send(handleAddTrend);
+    if ($('#add_trends').val() == ""){
+      var add_trends = [];
+    }else{
+      var add_trends = $('#add_trends').val().split(",");
+    }
+
+    add_trends.push(term);
+    $('#add_trends').val(add_trends.join(","));
+    
+    
 
   }
   var newTrendData;
@@ -407,6 +516,22 @@ function handleCompleteTrend(response){
   function handleAddTrend(response) {
 
     newTrendData = response.getDataTable();
+
+    {% if hourly %}
+
+    newTrendData.insertColumn(0,"datetime","date","Date");
+
+    for (var i=0;i < newTrendData.getNumberOfRows();i++){
+      var d = new Date(newTrendData.getFormattedValue(i,1));
+      var f = newTrendData.getFormattedValue(i,1);
+      newTrendData.setCell(i,0,d,f);
+    }
+
+    newTrendData.removeColumn(1);
+
+    {% endif %}
+
+
 
     var existing = [];
 
@@ -420,7 +545,111 @@ function handleCompleteTrend(response){
 
   var added_stock;
   var dtx,newDataTable;
+  var yahoo;
+  var hashx = {};
+  var to_adder = [];
+  var prev_price = 0;
+  var prev_formatted = 0;
+
   function addStock(symbol) {
+
+    if ($('#add_stocks').val() == ""){
+      var add_stocks = [];
+    }else{
+      var add_stocks = $('#add_stocks').val().split(",");
+    }
+
+    add_stocks.push(symbol);
+    $('#add_stocks').val(add_stocks.join(","));
+
+    {% if hourly %}
+
+
+
+
+    var hashed = {};
+
+
+    $.ajax({
+        url: "http://chartapi.finance.yahoo.com/instrument/1.0/"+symbol+"/chartdata;type=quote;range=8d/json",
+     
+        // Tell jQuery we're expecting JSONP
+        dataType: "jsonp",
+     
+        // Work with the response
+        success: function( response ) {
+          var to_add = [];
+          yahoo = response;
+          $(response.series).each(function(i){
+
+
+            //daconsole.log(moment.unix(response.series[i].Timestamp).format("Y-MM-DD HH"));
+            hashx[moment.unix(response.series[i].Timestamp).format("Y-MM-DD HH")] = i;
+            to_add.push(response.series[i].close);
+
+          });
+
+
+          var max = Math.max.apply(Math,to_add);
+          var min = Math.min.apply(Math,to_add)
+
+          $(to_add).each(function(i){
+            to_adder.push(100*(to_add[i]-min)/(max-min));
+          });
+
+          dataTable.addColumn('number',symbol,symbol);
+
+          var first_match = false;
+          
+          $.each(getDataTableColumn(0),function(i){
+
+            var date_key = moment(dataTable.getValue(i,0)).format("Y-MM-DD HH");
+
+            var cols = dataTable.getNumberOfColumns()-1;
+            if (date_key in hashx) {
+
+              if (!first_match){
+                first_match = true;
+                prev_price = to_adder[hashx[date_key]-1];
+                prev_formatted = to_add[hashx[date_key]-1].toString()
+              }
+
+              dataTable.setCell(i,
+                cols,
+                to_adder[hashx[date_key]],
+                to_add[hashx[date_key]].toString()
+              );
+            }else{
+              if(i-1>-1){
+                dataTable.setCell(i,cols,dataTable.getValue(i-1,cols),dataTable.getFormattedValue(i-1,cols));
+              }else{
+
+              } 
+            }
+          });
+
+          $.each(getDataTableColumn(0),function(i){
+            var cols = dataTable.getNumberOfColumns()-1;
+            if (dataTable.getValue(i,cols) == null){
+              dataTable.setCell(i,cols,prev_price,prev_formatted);
+            }
+          });
+
+          options.series[dataTable.getNumberOfColumns()-2] = { lineDashStyle: [4,1], lineWidth:2 }
+
+          chart.draw(dataTable,options);
+
+
+            //console.log( hashx ); // server response
+        }
+    });
+
+
+
+
+    {% else %}
+
+    
     var add_url = "https://www.quandl.com/api/v3/datasets/WIKI/"+symbol+".json?qopts.columns=date,close&collapse=daily&api+key= Q6YzQTqA1mSKaaYL-Cb3&start_date="+moment(dataTable.getValue(0,0)).format("Y-MM-DD");
 
 
@@ -457,10 +686,40 @@ function handleCompleteTrend(response){
       chart.draw(dataTable,options);
 
     });
+
+    {% endif %}
+
+
+
   }
 </script>
 
 <script type="text/javascript">
+var suggest = function(ob){
+  return "<div><b class='symbol'>"+ob.Symbol+"</b> - "+ob.Name+"</div>";
+}
+
+function auto_stocks (what) {
+  what.typeahead({
+    hint: true,
+    highlight: true,
+    minLength: 1
+  },
+  {
+    name: 'stock',
+    source: stocks,
+    limit: 25,
+    display: 'Symbol',
+    templates: {
+      suggestion: suggest
+    }
+  }).on("keyup",function(e){
+      if(e.which == 13) {
+        addStock($(this).val());
+        $(this).val("");
+      }
+  });
+}
   $(document).ready(function(){
     $('a.gprop').click(function(){
       var gprop = $("#gprop").html();
@@ -481,13 +740,61 @@ function handleCompleteTrend(response){
     $('.combobox').combobox();
     $('#date-display').html("{{gdates_text}}");
     $('#input-date').val("{{start_date}}");
+    /*
+    $(".xignite-typeahead").xigniteTypeahead({ api: "https://search.xignite.com/Search/Suggest", keyParam: "parameter", q: "term" }).on("keyup",function(e){
+        if(e.which == 13) {
+          addStock($(this).val());
+          $(this).val("");
+        }
+    });*/
 
-    $(".xignite-typeahead").xigniteTypeahead({ api: "http://search.xignite.com/Search/Suggest", keyParam: "parameter", q: "term" }).on("keyup",function(e){
-        if(e.which == 13) {addStock($(this).val())}
+    var stocks = new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.obj.whitespace(['Symbol','Name']),
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      // `states` is an array of state names defined in "The Basics"
+      prefetch: '/static/symbols.json'
     });
 
+
+    $('#bloodhound .typeahead').typeahead({
+      hint: true,
+      highlight: true,
+      minLength: 1
+    },
+    {
+      name: 'stock',
+      source: stocks,
+      limit: 25,
+      display: 'Symbol',
+      templates: {
+        suggestion: suggest
+      }
+    }).on("keyup",function(e){
+        if(e.which == 13) {
+          addStock($(this).val());
+          $(this).val("");
+        }
+    });
+
+    $('#stock').blur(function(){
+      $(this).val("");
+    })
+
     $("#search").on("keyup",function(e){
-        if(e.which == 13) {addTrend($(this).val())}
+        if(e.which == 13) {
+          addTrend($(this).val());
+          $(this).val("");
+        }
+    });
+
+    $('a#export_json').click(function(){
+      $('textarea#export').html(dataTable.toJSON());
+      $('#export_format').html("JSON");
+    });
+
+    $('a#export_csv').click(function(){
+      $('textarea#export').html(google.visualization.dataTableToCsv(dataTable));
+      $('#export_format').html("CSV");
     });
 
     $(window).keydown(function(event){
@@ -495,6 +802,11 @@ function handleCompleteTrend(response){
           event.preventDefault();
           return false;
         }
-      });
+    });
+    $(window).on('keyup keydown', function(e){
+      shifted = e.shiftKey;
+      //console.log("shifted",shifted);
+    } );
+
   });
 </script>

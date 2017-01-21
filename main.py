@@ -2,6 +2,7 @@
 
 from __future__ import division
 from webapp2_extras import jinja2
+
 import webapp2
 import os
 import json
@@ -13,6 +14,10 @@ from datetime import datetime, timedelta
 from itertools import islice, tee
 
 from handlers import *
+from decorators import *
+from models import *
+
+from util import pacTZ
 
 intrinio_un = "f14a7f21a25d12f05be67615ac078841"
 intrinio_pw = "2c75726a36c24361e8aeb00b769904d1"
@@ -34,13 +39,21 @@ gDates = {
     "today 7-d":"Past 7 Days"
 }
 
-class MainPage(BaseHandler):
-    def get(self):
+def get_gDate(date_string):
+    if date_string in gDates:
+        return gDates[date_string]
+    else:
+        return date_string
 
-        trend_line = self.request.get('trend_line')
-        print "trend_line: %s" % trend_line
+
+class TrendyHandler(BaseHandler):
+    @cache_check
+    @check_trends
+    def get(self):
+        trend_line = self.request.get('q')
+
         start_date = self.request.get("date")
-        stock = self.request.get("stock")
+        stock = self.request.get("x")
         geo = self.request.get("geo")
         hide_date = False
         old = False
@@ -48,8 +61,18 @@ class MainPage(BaseHandler):
         hourly = False
         complete_trend = False
         start_date_normal = "2004-01-01"
+        last_date = ""
+
+        if trend_line == "":
+            trend_line = urllib.unquote(self.request.get("default_q"))
+        if stock == "":
+            stock = urllib.unquote(self.request.get("default_x"))
+
+
+        print "trend line: %s" % trend_line
+        print "stock line: %s" % stock
         if not start_date:
-            start_date = "today 5-y"
+            start_date = "today 60-m"
             
             hide_date = True
 
@@ -68,8 +91,7 @@ class MainPage(BaseHandler):
                 frequency = 7
                 complete_trend = True
 
-        if not trend_line:
-            trend_line = "trump"
+
 
         if self.request.get("old"):
             old = True
@@ -87,7 +109,7 @@ class MainPage(BaseHandler):
                     request_url = "http://data.bitcoinity.org/export_data.csv?c=e&currency=USD&data_type=price&r=hour&t=l&timespan=7d"
                     result = urlfetch.fetch(request_url)
                     ticker = result.content.split("\n")[:-1]
-                    print ticker[:-1]
+
                     ticker = [reduce(lambda x, y: x + y, map(float,filter(None,t.split(",")[1:]))) / len(filter(None,t.split(",")[1:])) for t in ticker[1:] if t]
 
                 else:
@@ -108,7 +130,7 @@ class MainPage(BaseHandler):
 
             elif stock.lower() == "housing":
                 zipcode = self.request.get("zip")
-                print zipcode
+
                 if not zipcode:
                     zipcode = "94041"
                 request_url = "https://www.quandl.com/api/v3/datasets/ZILL/Z%s_a.json" % zipcode
@@ -140,29 +162,38 @@ class MainPage(BaseHandler):
                     ticker = []
                     current_date = ""
                     ticker_dict = {}
-                    print "hourly"
+
                     for x in content["series"]:
-                        date_string = datetime.fromtimestamp(x["Timestamp"]).strftime("%Y-%m-%d %H")
+
+                        date_string = datetime.fromtimestamp(x["Timestamp"],pacTZ()).strftime("%Y-%m-%d %H")
 
                         if date_string != current_date:
+                            #print date_string
                             current_date = date_string
                             ticker.append(x["close"])
-                            ticker_dict[datetime.fromtimestamp(x["Timestamp"]).strftime("%Y-%m-%d %H")] = x["close"]
+                            ticker_dict[datetime.fromtimestamp(x["Timestamp"],pacTZ()).strftime("%Y-%m-%d %H")] = x["close"]
 
 
-                    base = datetime.today()
+                    base = datetime.now(pacTZ())
+
+
+
                     date_list = [(base - timedelta(hours=x)).strftime("%Y-%m-%d %H") for x in range(0, 240)]
-                    
+                    date_list.reverse()
                     ticker_full = []
                     started = False
                     for i,d in enumerate(date_list):
                         if d in ticker_dict:
-                            started = True
+                            if not started:
+                                last_date = d
+                                started = True
                             ticker_full.append(ticker_dict[d])
+                            
                         else:
                             if started:
                                 ticker_full.append(ticker_full[-1])
 
+                    #ticker_full.reverse()
                     ticker = ticker_full
                     ticker_x = ticker
                     ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
@@ -180,7 +211,7 @@ class MainPage(BaseHandler):
 
                     request_url = "https://api.intrinio.com/prices?identifier=%s&item=close&start_date=%s&frequency=%s" % (stock.upper(),start_date_normal,f)
 
-                    print request_url
+
 
                     result = urlfetch.fetch(request_url,
                                             headers={"Authorization": 
@@ -223,6 +254,9 @@ class MainPage(BaseHandler):
             ticker = []
             ticker_x = []
 
+        add_stocks = list(set(self.request.get("add_stocks").split(",")))
+        add_trends = list(set(self.request.get("add_trends").split(",")))
+
         template_values = {
             'trend_line': urllib.quote(trend_line),
             'trend_clean':trend_line,
@@ -241,18 +275,29 @@ class MainPage(BaseHandler):
             'ticker_dict':ticker_dict,
             'gprop':self.request.get("gprop"),
             'gprop_text':gProps[self.request.get("gprop")],
-            'gdates_text':gDates[self.request.get("date")],
+            'gdates_text':get_gDate(self.request.get("date")),
             'ticker_x':ticker_x,
             'url':self.request.url,
+            'last_date':last_date,
             'ticker_time':ticker_time,
+            'add_stocks':add_stocks,
+            'add_trends':add_trends,
             'step':self.request.get("step")}
 
-
         self.render_response('index.html', **template_values)
-
-
-
+            
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage)
-], debug=True)
+    ('/.well-known/acme-challenge/([\w-]+)', LetsEncryptHandler),
+    ('/cv', CVHandler),
+    ('/trendy', TrendyHandler),
+    ('/flush', FlushHandler),
+    ('/robots.txt', BotsHandler),
+    ('/r/(.*)', ReadHandler),
+    ('/w/(.*)', WriteHandler),
+    ('/admin/(.*)', AdminHandler),
+    ('/_ah/warmup', WarmupHandler),
+    ('/datatable', DataTableHandler),
+    ('/.*', HomeHandler)
+
+], debug=False)
