@@ -221,34 +221,39 @@ class TrendyHandler(BaseHandler):
                     new_ticker = []
 
                     ticker_dict = {}
-                    for x in ticker["data"]:
-                        new_ticker.append(x["close"])
-                        ticker_dict[x["date"]] = x["close"]
 
-                    base = datetime.today()
-                    if f == "daily":
-                        date_list = [(base - timedelta(days=x)).strftime("%Y-%m-%d") for x in range(0, 120)]
-                        ticker_full = []
+                    if 'data' in ticker:
+                        for x in ticker["data"]:
+                            new_ticker.append(x["close"])
+                            ticker_dict[x["date"]] = x["close"]
 
-                        started = False
-                        for i,d in enumerate(date_list):
-                            if d in ticker_dict:
-                                started = True
-                                ticker_full.append(ticker_dict[d])
-                            else:
-                                if started:
-                                    ticker_dict[d] = ticker_full[-1]
-                                    ticker_full.append(ticker_full[-1])
-                        
-                        ticker = ticker_full
+                        base = datetime.today()
+                        if f == "daily":
+                            date_list = [(base - timedelta(days=x)).strftime("%Y-%m-%d") for x in range(0, 120)]
+                            ticker_full = []
 
+                            started = False
+                            for i,d in enumerate(date_list):
+                                if d in ticker_dict:
+                                    started = True
+                                    ticker_full.append(ticker_dict[d])
+                                else:
+                                    if started:
+                                        ticker_dict[d] = ticker_full[-1]
+                                        ticker_full.append(ticker_full[-1])
+                            
+                            ticker = ticker_full
+
+                        else:
+                            ticker = new_ticker
+
+                        ticker.reverse()
+                        ticker_x = ticker
+                        ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
+                        ticker = [round(100*x,4)for x in ticker]
                     else:
-                        ticker = new_ticker
-
-                    ticker.reverse()
-                    ticker_x = ticker
-                    ticker = [(x-min(ticker))/(max(ticker)-min(ticker)) for x in ticker]
-                    ticker = [round(100*x,4)for x in ticker]
+                        ticker_x = []
+                        ticker = []
 
         else:
             ticker = []

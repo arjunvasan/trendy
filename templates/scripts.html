@@ -571,7 +571,7 @@ function handleCompleteTrend(response){
 
 
     $.ajax({
-        url: "http://chartapi.finance.yahoo.com/instrument/1.0/"+symbol+"/chartdata;type=quote;range=8d/json",
+        url: "https://chartapi.finance.yahoo.com/instrument/1.0/"+symbol+"/chartdata;type=quote;range=8d/json",
      
         // Tell jQuery we're expecting JSONP
         dataType: "jsonp",
@@ -771,19 +771,23 @@ function auto_stocks (what) {
       }
     }).on("keyup",function(e){
         if(e.which == 13) {
-          addStock($(this).val());
+          var v = $(this).val();
           $(this).val("");
+          addStock(v);
+          
         }
     });
-
+    /*
     $('#stock').blur(function(){
       $(this).val("");
-    })
+    })*/
 
     $("#search").on("keyup",function(e){
         if(e.which == 13) {
-          addTrend($(this).val());
+          var v = $(this).val();
+          addTrend(v);
           $(this).val("");
+          
         }
     });
 
